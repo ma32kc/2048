@@ -1,9 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+   // values
+
    const grid = document.querySelector('.game__field')
    const scoreTable = document.querySelector('.score-header__number-now')
    const bestTable = document.querySelector('.score-header__number-best')
    const newGame = document.querySelector('.new-game')
    const result = document.querySelector('.result')
+   const game = document.querySelector('.game')
+   const secondTable = document.querySelector('.seconds')
+   const minuteTable = document.querySelector('.minutes')
    const n = 5
    let squares = []
    let score = 0
@@ -11,44 +17,51 @@ document.addEventListener('DOMContentLoaded', () => {
    let x1 = null
    let y1 = null
    let direction = ''
-   let hours = 00, minutes = 00, seconds = 00, milliseconds = 00, interval
-   const secondTable = document.querySelector('.seconds')
-   const minuteTable = document.querySelector('.minutes')
+   let minutes = 00, seconds = 00, milliseconds = 00, interval
+
+   // start game
+
    interval = setInterval(startTimer, 10)
-   function startTimer() {
-      milliseconds++
-      if (milliseconds > 99) {
-         seconds++
-         secondTable.innerHTML = '0' + seconds
-         milliseconds = 0
-      }
+   createBoard()
+   checkZero()
 
-      // seconds
+   // eventListeners
 
-      if (seconds < 9) {
-         secondTable.innerHTML = '0' + seconds
-      }
-      if (seconds > 9) {
-         secondTable.innerHTML = seconds
-      }
-      if (seconds > 60) {
-         minutes++
-         minuteTable.innerHTML = '0' + minutes
-         seconds = 0
-         secondTable.innerHTML = '0' + seconds
-      }
+   newGame.addEventListener('click', resetBoard)
+   document.querySelector('.header__btn__open').addEventListener('click', openFullscreen)
+   document.querySelector('.header__btn__close').addEventListener('click', closeFullscreen)
+   document.addEventListener('keyup', control)
+   document.addEventListener('keydown', (event) => event.preventDefault())
 
-      //minutes
+   // functions
 
-      if (minutes > 9) {
-         minuteTable.innerHTML = minutes
+   // generate random number (2 or 4)
+
+   function getNum() {
+      while (1) {
+         let fieldNumber = getRandomInt(n * n)
+         if (squares[fieldNumber].innerText == 0) {
+            const chance = Math.random()
+            if (chance > 0.1) {
+               squares[fieldNumber].innerHTML = 2
+            }
+            else {
+               squares[fieldNumber].innerHTML = 4
+            }
+            checkForLose()
+            break;
+         }
       }
-
    }
 
+   // create board
+
    function createBoard() {
-      // document.addEventListener('touchstart', handleTouchStart, false)
-      // document.addEventListener('touchmove', handleTouchMove, false)
+      document.addEventListener('touchstart', handleTouchStart, false)
+      document.addEventListener('touchmove', handleTouchMove, false)
+      game.addEventListener('mousedown', handleMouseStart)
+      game.addEventListener('mousemove', handleMouseMove)
+
       for (let index = 0; index < n * n; index++) {
          square = document.createElement('div')
          square.classList.add('field-game__square')
@@ -56,16 +69,15 @@ document.addEventListener('DOMContentLoaded', () => {
          grid.appendChild(square)
          squares.push(square)
       }
+
       for (let index = 0; index < 2; index++) {
          getNum()
       }
-
-
    }
-   createBoard()
-   checkZero()
 
-   newGame.addEventListener("click", () => {
+   // reset board
+
+   function resetBoard() {
       minutes = 00, seconds = 00, milliseconds = 00
       secondTable.innerHTML = '00'
       minuteTable.innerHTML = '00'
@@ -82,7 +94,47 @@ document.addEventListener('DOMContentLoaded', () => {
       document.addEventListener('keyup', control)
       createBoard()
       checkZero()
-   })
+   }
+
+   // mouse/touch events functions
+
+   function handleMouseStart(event) {
+      x1 = event.clientX;
+      y1 = event.clientY;
+   }
+   function handleMouseMove(event) {
+      if (!x1 || !y1) {
+         return false;
+      }
+      let x2 = event.clientX;
+      let y2 = event.clientY;
+      let xDif = x2 - x1;
+      let YDif = y2 - y1;
+
+      if (Math.abs(xDif) > Math.abs(YDif)) {
+         if (xDif > 0) {
+            keyRight()
+            checkZero()
+         }
+         else {
+            keyLeft()
+            checkZero()
+         }
+      }
+      else {
+         if (YDif > 0) {
+            keyDown()
+            checkZero()
+         }
+         else {
+            keyUp()
+            checkZero()
+         }
+      }
+      x1 = null
+      y1 = null
+      console.log(direction);
+   }
 
    function handleTouchStart(event) {
       const firstTouch = event.touches[0];
@@ -124,28 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log(direction);
    }
 
-   function getNum() {
-      while (1) {
-         let fieldNumber = getRandomInt(n * n)
-         if (squares[fieldNumber].innerText == 0) {
-            const chance = Math.random()
-            if (chance > 0.1) {
-               squares[fieldNumber].innerHTML = 2
-            }
-            else {
-               squares[fieldNumber].innerHTML = 4
-            }
-            checkForLose()
-            break;
-         }
-      }
-   }
-
    function getRandomInt(max) {
       return Math.floor(Math.random() * max);
    }
 
    // right
+
    function moveRight() {
       for (let i = 0; i < n * n; i++) {
          if (i % n == 0) {
@@ -170,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    // left
+
    function moveLeft() {
       for (let i = 0; i < n * n; i++) {
          if (i % n == 0) {
@@ -194,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    // up
+
    function moveUp() {
       for (let i = 0; i < n; i++) {
          let totalOne = squares[i].innerHTML
@@ -215,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    // down
+
    function moveDown() {
       for (let i = 0; i < n; i++) {
          let totalOne = squares[i].innerHTML
@@ -236,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    // combine rows
+
    function combineRow() {
       for (let i = 0; i < n * n - 1; i++) {
          if (squares[i].innerHTML === squares[i + 1].innerHTML) {
@@ -255,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    // combine columns
+
    function combineColumn() {
       for (let i = 0; i < n * n - n; i++) {
          if (squares[i].innerHTML === squares[i + n].innerHTML) {
@@ -274,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    //control 
+
    function control(e) {
       if (e.keyCode === 39) {
          keyRight()
@@ -292,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
          checkZero()
       }
    }
-   document.addEventListener('keyup', control)
 
    function keyRight() {
       moveRight()
@@ -425,202 +466,42 @@ document.addEventListener('DOMContentLoaded', () => {
          document.msExitFullscreen();
       }
    }
-   document.querySelector('.header__btn__open').addEventListener('click', openFullscreen)
-   document.querySelector('.header__btn__close').addEventListener('click', closeFullscreen)
-   /**
- * Функция определения события swipe на элементе.
- * @param {Object} el - элемент DOM.
- * @param {Object} settings - объект с предварительными настройками.
- */
-   var swipe = function (el, settings) {
 
-      // настройки по умолчанию
-      var settings = Object.assign({}, {
-         minDist: 60,  // минимальная дистанция, которую должен пройти указатель, чтобы жест считался как свайп (px)
-         maxDist: 120, // максимальная дистанция, не превышая которую может пройти указатель, чтобы жест считался как свайп (px)
-         maxTime: 700, // максимальное время, за которое должен быть совершен свайп (ms)
-         minTime: 50   // минимальное время, за которое должен быть совершен свайп (ms)
-      }, settings);
+   // set timer
 
-      // коррекция времени при ошибочных значениях
-      if (settings.maxTime < settings.minTime) settings.maxTime = settings.minTime + 500;
-      if (settings.maxTime < 100 || settings.minTime < 50) {
-         settings.maxTime = 700;
-         settings.minTime = 50;
+   function startTimer() {
+
+      // milliseconds
+
+      milliseconds++
+
+      if (milliseconds > 99) {
+         seconds++
+         secondTable.innerHTML = '0' + seconds
+         milliseconds = 0
       }
 
-      var dir,                // направление свайпа (horizontal, vertical)
-         swipeType,            // тип свайпа (up, down, left, right)
-         dist,                 // дистанция, пройденная указателем
-         isMouse = false,      // поддержка мыши (не используется для тач-событий)
-         isMouseDown = false,  // указание на активное нажатие мыши (не используется для тач-событий)
-         startX = 0,           // начало координат по оси X (pageX)
-         distX = 0,            // дистанция, пройденная указателем по оси X
-         startY = 0,           // начало координат по оси Y (pageY)
-         distY = 0,            // дистанция, пройденная указателем по оси Y
-         startTime = 0,        // время начала касания
-         support = {           // поддерживаемые браузером типы событий
-            pointer: !!("PointerEvent" in window || ("msPointerEnabled" in window.navigator)),
-            touch: !!(typeof window.orientation !== "undefined" || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || "ontouchstart" in window || navigator.msMaxTouchPoints || "maxTouchPoints" in window.navigator > 1 || "msMaxTouchPoints" in window.navigator > 1)
-         };
+      // seconds
 
-      /**
-       * Опредление доступных в браузере событий: pointer, touch и mouse.
-       * @returns {Object} - возвращает объект с доступными событиями.
-       */
-      var getSupportedEvents = function () {
-         switch (true) {
-            case support.pointer:
-               events = {
-                  type: "pointer",
-                  start: "PointerDown",
-                  move: "PointerMove",
-                  end: "PointerUp",
-                  cancel: "PointerCancel",
-                  leave: "PointerLeave"
-               };
-               // добавление префиксов для IE10
-               var ie10 = (window.navigator.msPointerEnabled && Function('/*@cc_on return document.documentMode===10@*/')());
-               for (var value in events) {
-                  if (value === "type") continue;
-                  events[value] = (ie10) ? "MS" + events[value] : events[value].toLowerCase();
-               }
-               break;
-            case support.touch:
-               events = {
-                  type: "touch",
-                  start: "touchstart",
-                  move: "touchmove",
-                  end: "touchend",
-                  cancel: "touchcancel"
-               };
-               break;
-            default:
-               events = {
-                  type: "mouse",
-                  start: "mousedown",
-                  move: "mousemove",
-                  end: "mouseup",
-                  leave: "mouseleave"
-               };
-               break;
-         }
-         return events;
-      };
+      if (seconds < 9) {
+         secondTable.innerHTML = '0' + seconds
 
-
-      /**
-       * Объединение событий mouse/pointer и touch.
-       * @param e {Event} - принимает в качестве аргумента событие.
-       * @returns {TouchList|Event} - возвращает либо TouchList, либо оставляет событие без изменения.
-       */
-      var eventsUnify = function (e) {
-         return e.changedTouches ? e.changedTouches[0] : e;
-      };
-
-
-      /**
-       * Обрабочик начала касания указателем.
-       * @param e {Event} - получает событие.
-       */
-      var checkStart = function (e) {
-         var event = eventsUnify(e);
-         if (support.touch && typeof e.touches !== "undefined" && e.touches.length !== 1) return; // игнорирование касания несколькими пальцами
-         dir = "none";
-         swipeType = "none";
-         dist = 0;
-         startX = event.pageX;
-         startY = event.pageY;
-         startTime = new Date().getTime();
-         if (isMouse) isMouseDown = true; // поддержка мыши
-      };
-
-      /**
-       * Обработчик движения указателя.
-       * @param e {Event} - получает событие.
-       */
-      var checkMove = function (e) {
-         if (isMouse && !isMouseDown) return; // выход из функции, если мышь перестала быть активна во время движения
-         var event = eventsUnify(e);
-         distX = event.pageX - startX;
-         distY = event.pageY - startY;
-         if (Math.abs(distX) > Math.abs(distY)) dir = (distX < 0) ? "left" : "right";
-         else dir = (distY < 0) ? "up" : "down";
-      };
-
-      /**
-       * Обработчик окончания касания указателем.
-       * @param e {Event} - получает событие.
-       */
-      var checkEnd = function (e) {
-         if (isMouse && !isMouseDown) { // выход из функции и сброс проверки нажатия мыши
-            isMouseDown = false;
-            return;
-         }
-         var endTime = new Date().getTime();
-         var time = endTime - startTime;
-         if (time >= settings.minTime && time <= settings.maxTime) { // проверка времени жеста
-            if (Math.abs(distX) >= settings.minDist && Math.abs(distY) <= settings.maxDist) {
-               swipeType = dir; // опредление типа свайпа как "left" или "right"
-            } else if (Math.abs(distY) >= settings.minDist && Math.abs(distX) <= settings.maxDist) {
-               swipeType = dir; // опредление типа свайпа как "top" или "down"
-            }
-         }
-         dist = (dir === "left" || dir === "right") ? Math.abs(distX) : Math.abs(distY); // опредление пройденной указателем дистанции
-
-         // генерация кастомного события swipe
-         if (swipeType !== "none" && dist >= settings.minDist) {
-            var swipeEvent = new CustomEvent("swipe", {
-               bubbles: true,
-               cancelable: true,
-               detail: {
-                  full: e, // полное событие Event
-                  dir: swipeType, // направление свайпа
-                  dist: dist, // дистанция свайпа
-                  time: time // время, потраченное на свайп
-               }
-            });
-            el.dispatchEvent(swipeEvent);
-         }
-      };
-
-      // добавление поддерживаемых событий
-      var events = getSupportedEvents();
-
-      // проверка наличия мыши
-      if ((support.pointer && !support.touch) || events.type === "mouse") isMouse = true;
-
-      // добавление обработчиков на элемент
-      el.addEventListener(events.start, checkStart);
-      el.addEventListener(events.move, checkMove);
-      el.addEventListener(events.end, checkEnd);
-      if (support.pointer && support.touch) {
-         el.addEventListener('lostpointercapture', checkEnd);
       }
-   };
+      if (seconds > 9) {
+         secondTable.innerHTML = seconds
 
-   // вызов функции swipe с предварительными настройками
-   swipe(document, { maxTime: 1000, minTime: 100, maxDist: 150, minDist: 60 });
-
-   // обработка свайпов
-   document.addEventListener("swipe", function (e) {
-      switch (e.detail.dir) {
-         case 'right':
-            keyRight()
-            checkZero()
-            break;
-         case 'left':
-            keyLeft()
-            checkZero()
-            break;
-         case 'up':
-            keyUp()
-            checkZero()
-            break;
-         case 'down':
-            keyDown()
-            checkZero()
-            break;
       }
-   });
+      if (seconds > 60) {
+         minutes++
+         minuteTable.innerHTML = '0' + minutes
+         seconds = 0
+         secondTable.innerHTML = '0' + seconds
+      }
+
+      //minutes
+
+      if (minutes > 9) {
+         minuteTable.innerHTML = minutes
+      }
+   }
 })
