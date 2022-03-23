@@ -1,8 +1,8 @@
+body {
+  background: radial-gradient(circle, #349db6 0%, #5bb3da 20%, #f29df7 100%);
+}
 .wrapper {
   margin: 0;
-  background: #349db6;
-  background: radial-gradient(circle, #349db6 0%, #5bb3da 20%, #f29df7 100%);
-  padding: 10px 0;
 }
 .header__container {
   padding-top: 10px;

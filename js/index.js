@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
    document.querySelector('.header__btn__open').addEventListener('click', openFullscreen)
    document.querySelector('.header__btn__close').addEventListener('click', closeFullscreen)
    document.addEventListener('keyup', control)
-   document.addEventListener('keydown', (event) => event.preventDefault())
+   //document.addEventListener('keydown', (event) => event.preventDefault())
 
    // functions
 
